@@ -54,10 +54,10 @@ function AtxCreateConstruct(_constructName, _config = {})
 }
 function AtxCreateComponentFromConfig(_componentName, _componentConfig)
 {
-   var _componentReference = asset_get_index(_componentName);
-   if (_componentReference == -1 || asset_get_type(_componentReference) != asset_script) 
+   var _componentReference = variable_global_get(_componentName);
+   if (_componentReference == -1) 
    {
-      show_debug_message("AtxCreateComponentFromConfig: {_componentName} does not exist or is not a script.")
+      show_debug_message($"AtxCreateComponentFromConfig: {_componentName} does not exist or is not a script.")
       return undefined;
    }
    var _component = new _componentReference();
@@ -222,20 +222,34 @@ function AtxSaveConstructsToFile(_fileName)
    }
    
    var _jsonString = json_stringify(_saveData, true);
-   var _file = file_text_open_write(_fileName);
-   file_text_write_string(_file, _jsonString);
-   file_text_close(_file);
-   show_debug_message($"AtxSaveConstructsToFile: Saved {_constructKeyCount} constructs to {_fileName}.json.");
+   var _buffer = buffer_create(string_byte_length(_jsonString) + 1, buffer_fixed, 1);
+   buffer_write(_buffer, buffer_string, _jsonString);
+   buffer_save(_buffer, _fileName);
+   buffer_delete(_buffer);
+   show_debug_message($"AtxSaveConstructsToFile: Saved {_constructKeyCount} constructs to {_fileName}.");
+}
+
+function AtxLoadConstructsFromFile(_fileName, _clearExisting = true)
+{
+   if (!file_exists(_fileName))
+   {
+         show_debug_message($"AtxLoadConstructsFromFile: Can not find a file with {_fileName}.");
+   }
+   
+   var _buffer = buffer_load(_fileName);
+   var _jsonString = buffer_read(_buffer, buffer_text);
+   buffer_delete(_buffer);
+   var _parsedData = json_parse(_jsonString);
+   
+   if (_clearExisting) global.__atxConstructRegistry = {};
+      
+   var _constructKeys = variable_struct_get_names(_parsedData);
+   var _constructKeyCount = array_length(_constructKeys);
+   
+   for (var _i = 0; _i < _constructKeyCount; _i++)
+   {
+      AtxCreateConstruct(_constructKeys[_i], _parsedData[$ _constructKeys[_i]])
+   }
+   show_debug_message($"AtxLoadConstructsFromFile: Loaded {_constructKeyCount} constructs from {_fileName}.");
 }
 #endregion
-
-// Create test construct
-AtxCreateConstruct("save_test", {
-    object: obj_quick_test_entity,
-    layer: "Instances",
-    config: {
-        components: {
-            TestHealthComponent: {hitPoints: 50, maxHitPoints: 50}
-        }
-    }
-});

@@ -1,15 +1,18 @@
 {
   "$GMObject":"",
-  "%Name":"__atxEntity",
+  "%Name":"obj_quick_test_entity",
   "eventList":[],
   "managed":true,
-  "name":"__atxEntity",
+  "name":"obj_quick_test_entity",
   "overriddenProperties":[],
   "parent":{
-    "name":"AtxComposition",
-    "path":"folders/Extensions/AtxComposition.yy",
+    "name":"debug",
+    "path":"folders/debug.yy",
   },
-  "parentObjectId":null,
+  "parentObjectId":{
+    "name":"__atxConstructParent",
+    "path":"objects/__atxConstructParent/__atxConstructParent.yy",
+  },
   "persistent":false,
   "physicsAngularDamping":0.1,
   "physicsDensity":0.5,
