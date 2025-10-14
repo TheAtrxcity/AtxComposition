@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"AtxConstructRegistry",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"AtxConstructRegistry",
+  "parent":{
+    "name":"AtxComposition",
+    "path":"folders/Extensions/AtxComposition.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}
