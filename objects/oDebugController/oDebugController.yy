@@ -8,8 +8,8 @@
   "name":"oDebugController",
   "overriddenProperties":[],
   "parent":{
-    "name":"AtxComposition",
-    "path":"AtxComposition.yyp",
+    "name":"debug",
+    "path":"folders/debug.yy",
   },
   "parentObjectId":null,
   "persistent":false,

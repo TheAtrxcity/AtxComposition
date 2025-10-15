@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"AtxSavingAndLoading",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"AtxSavingAndLoading",
+  "parent":{
+    "name":"AtxComposition",
+    "path":"folders/Extensions/AtxComposition.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

@@ -1,9 +1,9 @@
 {
   "$GMScript":"v1",
-  "%Name":"AtxConstructRegistry",
+  "%Name":"AtxConstructs",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"AtxConstructRegistry",
+  "name":"AtxConstructs",
   "parent":{
     "name":"AtxComposition",
     "path":"folders/Extensions/AtxComposition.yy",

@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"testSave",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"testSave",
+  "parent":{
+    "name":"debug",
+    "path":"folders/debug.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

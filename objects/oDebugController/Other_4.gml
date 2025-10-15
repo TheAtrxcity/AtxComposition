@@ -1,1 +1,1 @@
-TestJSONSystem();
+TestSaveFunction();

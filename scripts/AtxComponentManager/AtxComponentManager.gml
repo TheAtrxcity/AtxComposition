@@ -1,7 +1,12 @@
 /// @description Component Manager for managing object components with lifecycle methods, events, and queries
-function AtxComponentManager(_owner = self) constructor
+function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) constructor
 {
-   parentInstance = _owner;
+   parentInstance = self;
+   
+   savePriority = _priority;
+   enableSave = _enableSave;
+   constructReference = "";
+   saveMetadata = {};
    
    components = {};
    

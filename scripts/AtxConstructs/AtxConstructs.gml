@@ -123,7 +123,14 @@ function AtxSpawnConstruct(_constructName, _x, _y, _layerOrDepthOverride = undef
       
    if (!variable_instance_exists(_constructInstanceReference, "manager"))
    {
-      _constructInstanceReference.manager = new AtxComponentManager(_constructInstanceReference);
+      _constructInstanceReference.manager = new AtxComponentManager();
+   }
+   
+   _constructInstanceReference.manager.constructReference = _constructName;
+   
+   if (variable_instance_exists(_construct, "savePriority"))
+   {
+      _constructInstanceReference.manager.savePriority = _construct.savePriority;
    }
    
    var _componentKeys = variable_struct_get_names(_construct.config.components);
