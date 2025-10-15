@@ -20,3 +20,6 @@ global.__atxSaveConfig =
    //autoSaveEnabled : true,
    //autoSaveInterval : 300, 
 }
+
+// !! Don't change anything under here !!
+AtxInitialiseSaveSystem();

@@ -25,9 +25,13 @@
   "name":"AtxComposition",
   "resources":[
     {"id":{"name":"__atxConstructParent","path":"objects/__atxConstructParent/__atxConstructParent.yy",},},
+    {"id":{"name":"obj_player","path":"objects/obj_player/obj_player.yy",},},
     {"id":{"name":"obj_quick_test_entity","path":"objects/obj_quick_test_entity/obj_quick_test_entity.yy",},},
     {"id":{"name":"oDebugController","path":"objects/oDebugController/oDebugController.yy",},},
     {"id":{"name":"debug","path":"rooms/debug/debug.yy",},},
+    {"id":{"name":"rm_test_save_room_a","path":"rooms/rm_test_save_room_a/rm_test_save_room_a.yy",},},
+    {"id":{"name":"rm_test_save_room_b","path":"rooms/rm_test_save_room_b/rm_test_save_room_b.yy",},},
+    {"id":{"name":"rm_test_save_room_c","path":"rooms/rm_test_save_room_c/rm_test_save_room_c.yy",},},
     {"id":{"name":"AtxComponentBase","path":"scripts/AtxComponentBase/AtxComponentBase.yy",},},
     {"id":{"name":"AtxComponentManager","path":"scripts/AtxComponentManager/AtxComponentManager.yy",},},
     {"id":{"name":"AtxConstructs","path":"scripts/AtxConstructs/AtxConstructs.yy",},},
@@ -41,6 +45,9 @@
   "resourceType":"GMProject",
   "resourceVersion":"2.0",
   "RoomOrderNodes":[
+    {"roomId":{"name":"rm_test_save_room_a","path":"rooms/rm_test_save_room_a/rm_test_save_room_a.yy",},},
+    {"roomId":{"name":"rm_test_save_room_b","path":"rooms/rm_test_save_room_b/rm_test_save_room_b.yy",},},
+    {"roomId":{"name":"rm_test_save_room_c","path":"rooms/rm_test_save_room_c/rm_test_save_room_c.yy",},},
     {"roomId":{"name":"debug","path":"rooms/debug/debug.yy",},},
   ],
   "templateType":"game",

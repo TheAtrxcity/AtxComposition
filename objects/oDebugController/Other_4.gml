@@ -1,1 +1,1 @@
-TestSaveFunction();
+RunAllTests(1);
