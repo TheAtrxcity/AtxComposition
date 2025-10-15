@@ -1,5 +1,6 @@
 #macro ATX_GAME_VERSION 0
 
+// These are the priority enums the order in which constructs are loaded.
 enum ATX_SAVE
 {
    SYSTEM,
@@ -14,7 +15,7 @@ enum ATX_SAVE
 
 global.__atxSaveConfig = 
 {
-   saveDirectory : "saves/",
+   saveDirectory : "saves/", // %localappdata%/yourGameName/saves/
    maxSaveSlots : 10,
    // Future implementation?
    //autoSaveEnabled : true,

@@ -1,1 +1,0 @@
-RunAllTests(1);

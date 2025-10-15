@@ -1,4 +1,10 @@
 global.__atxConstructRegistry = {};
+
+/// @function AtxCreateConstruct
+/// @description Register a new construct (entity template) in the system
+/// @param {string} _constructName Unique identifier for this construct
+/// @param {struct} _config Configuration struct containing object, layer/depth, components, and tags
+/// @return {bool} True if construct was created successfully, false otherwise
 function AtxCreateConstruct(_constructName, _config = {})
 {
    if (!is_string(_constructName))
@@ -7,7 +13,6 @@ function AtxCreateConstruct(_constructName, _config = {})
       return false;
    }
    show_debug_message($"Initialising {_constructName}...");
-   
    
    if (!variable_struct_exists(_config, "object"))
    {
@@ -52,6 +57,12 @@ function AtxCreateConstruct(_constructName, _config = {})
    show_debug_message($"AtxCreateConstruct: Succesfully added {_constructName} to construct registry!\n");
    return true;
 }
+
+/// @function AtxCreateComponentFromConfig
+/// @description Creates a component instance from a configuration struct
+/// @param {string} _componentName The name of the component constructor function
+/// @param {struct} _componentConfig Configuration struct with property values to set
+/// @return {struct.AtxComponentBase,undefined} The created component instance, or undefined if failed
 function AtxCreateComponentFromConfig(_componentName, _componentConfig)
 {
    var _componentReference = variable_global_get(_componentName);
@@ -69,6 +80,15 @@ function AtxCreateComponentFromConfig(_componentName, _componentConfig)
    }
    return _component;
 }
+
+/// @function AtxSpawnConstruct
+/// @description Spawn an construct from a registered construct template
+/// @param {string} _constructName The name of the construct to spawn
+/// @param {real} _x The x position to spawn at
+/// @param {real} _y The y position to spawn at
+/// @param {string,real} _layerOrDepthOverride Optional layer name or depth value to override construct settings
+/// @param {struct} _overrides Optional struct containing component property overrides
+/// @return {Id.Instance,undefined} The spawned instance, or undefined if failed
 function AtxSpawnConstruct(_constructName, _x, _y, _layerOrDepthOverride = undefined, _overrides = undefined)
 {
    if (!variable_struct_exists(global.__atxConstructRegistry, _constructName))
@@ -77,13 +97,12 @@ function AtxSpawnConstruct(_constructName, _x, _y, _layerOrDepthOverride = undef
       return undefined;
    }
    var _construct = global.__atxConstructRegistry[$ _constructName];
-   var _constructInstance = variable_struct_exists(_construct, "object") ? _construct[$ "object"] : __atxEntity;
+   var _constructInstance = variable_struct_exists(_construct, "object") ? _construct[$ "object"] : __atxConstructParent;
    var _constructInstanceReference = undefined;
    var _depth = undefined;
    var _layer = undefined;
    if (_layerOrDepthOverride != undefined)
    {
-
       if (is_real(_layerOrDepthOverride))
       {
          _depth = _layerOrDepthOverride;
@@ -181,26 +200,42 @@ function AtxSpawnConstruct(_constructName, _x, _y, _layerOrDepthOverride = undef
 }
 
 #region Helpers
+
+/// @function AtxGetConstruct
+/// @description Retrieves a construct configuration from the registry
+/// @param {string} _constructName The name of the construct to retrieve
+/// @return {struct,undefined} The construct configuration struct, or undefined if not found
 function AtxGetConstruct(_constructName)
 {
    if (AtxConstructExists(_constructName)) return (global.__atxConstructRegistry[$ _constructName])
 }
 
+/// @function AtxGetAllConstructs
+/// @description Returns an array of all registered construct names
+/// @return {array<string>} Array of construct names
 function AtxGetAllConstructs()
 {
    return (struct_get_names(global.__atxConstructRegistry));
 }
 
+/// @function AtxConstructExists
+/// @description Checks if a construct exists in the registry
+/// @param {string} _constructName The name of the construct to check
+/// @return {bool} True if construct exists, false otherwise
 function AtxConstructExists(_constructName)
 {
    if (!variable_struct_exists(global.__atxConstructRegistry, _constructName))
    {
-      show_debug_message($"AtxGetConstruct:  Could not find construct {_constructName} inside the construct registry.");
+      show_debug_message($"AtxConstructExists: Could not find construct {_constructName} inside the construct registry.");
       return false;
    }
    return true;
 }
 
+/// @function AtxDeleteConstruct
+/// @description Removes a construct from the registry
+/// @param {string} _constructName The name of the construct to delete
+/// @return {bool} True if construct was deleted, false if it didn't exist
 function AtxDeleteConstruct(_constructName)
 {
    if (!AtxConstructExists(_constructName)) return false; 
@@ -209,6 +244,10 @@ function AtxDeleteConstruct(_constructName)
    return true;
 }
 
+/// @function AtxSaveConstructsToFile
+/// @description Saves all registered constructs to a JSON file
+/// @param {string} _fileName The file path to save to
+/// @return {undefined}
 function AtxSaveConstructsToFile(_fileName)
 {
    var _saveData = {};
@@ -236,11 +275,17 @@ function AtxSaveConstructsToFile(_fileName)
    show_debug_message($"AtxSaveConstructsToFile: Saved {_constructKeyCount} constructs to {_fileName}.");
 }
 
+/// @function AtxLoadConstructsFromFile
+/// @description Loads constructs from a JSON file into the registry
+/// @param {string} _fileName The file path to load from
+/// @param {bool} _clearExisting Whether to clear existing constructs before loading
+/// @return {undefined}
 function AtxLoadConstructsFromFile(_fileName, _clearExisting = true)
 {
    if (!file_exists(_fileName))
    {
-         show_debug_message($"AtxLoadConstructsFromFile: Can not find a file with {_fileName}.");
+      show_debug_message($"AtxLoadConstructsFromFile: Can not find a file with {_fileName}.");
+      return;
    }
    
    var _buffer = buffer_load(_fileName);
@@ -259,4 +304,5 @@ function AtxLoadConstructsFromFile(_fileName, _clearExisting = true)
    }
    show_debug_message($"AtxLoadConstructsFromFile: Loaded {_constructKeyCount} constructs from {_fileName}.");
 }
+
 #endregion

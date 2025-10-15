@@ -1,4 +1,8 @@
+/// @function AtxComponentManager
 /// @description Component Manager for managing object components with lifecycle methods, events, and queries
+/// @param {bool} _enableSave Whether this construct should be saved to disk
+/// @param {real} _priority Save priority for load order (lower numbers load first)
+/// @return {struct.AtxComponentManager}
 function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) constructor
 {
    parentInstance = self;
@@ -23,15 +27,14 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    componentTags = {};
    taggedComponents = {};
    
-   
    eventMap = {};
    queryMap = {};
    
    #region Adding / Removing components
-   /// @description Adds a component to the component manager.
-   /// If a component with the same type already exists, it will not be added again.
-   /// @param {Struct.AtxComponentBase} _component The component instance to add (must be created with 'new').
-   /// @return {Struct.AtxComponentBase} Returns the added component for chaining, or undefined if component already exists.
+   
+   /// @description Adds a component to the component manager
+   /// @param {struct.AtxComponentBase} _component The component instance to add (must be created with 'new')
+   /// @return {struct.AtxComponentBase} Returns the added component for chaining, or undefined if component already exists
    static AddComponent = function(_component)
    {
       var _componentKey = instanceof(_component);
@@ -44,8 +47,8 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       if (!HasAllDependencies(_component))
       {
          var _missing = GetMissingDependencies(_component);
-         show_debug_message($"AtxComponentManager (AddComponent): Couldn't add component because of missing dependencies. {_componentKey}"+
-         $"needs the following dependencies:\n{_missing}");
+         show_debug_message($"AtxComponentManager (AddComponent): Couldn't add component because of missing dependencies. {_componentKey}" +
+         $" needs the following dependencies:\n{_missing}");
          return undefined;
       }
       
@@ -115,11 +118,10 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       
       return _component;
    }
-
-   /// @description Removes a component from the manager and cleans up all its references.
-   /// Executes the component's Cleanup method if it exists before removal.
-   /// @param {String} _componentKey The component type name to remove (e.g., "AtxComponentHealth").
-   /// @return {Bool} Returns true if component was removed, false if it didn't exist.
+   
+   /// @description Removes a component from the manager and cleans up all its references
+   /// @param {string} _componentKey The component type name to remove (e.g., "AtxComponentHealth")
+   /// @return {bool} Returns true if component was removed, false if it didn't exist
    static RemoveComponent = function(_componentKey)
    {
       if (!variable_struct_exists(components, _componentKey))
@@ -133,7 +135,7 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       var _dependentCount = array_length(_dependents);
       if (_dependentCount > 0)
       {
-         show_debug_message($"AtxComponentManager (AddComponent): Couldn't remove component {_componentKey} because other components depend on it."+
+         show_debug_message($"AtxComponentManager (RemoveComponent): Couldn't remove component {_componentKey} because other components depend on it." +
          $"\nThe following components depend on this component:\n{_dependents}");
          return undefined;
       }
@@ -223,11 +225,13 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       
       return true;
    }
+   
    #endregion
+   
    #region Lifecycle Methods
-   /// @description Executes the Step method of all registered components that have one defined.
-   /// Components are executed in priority order (lowest to highest).
-   /// @return {Undefined}
+   
+   /// @description Executes the Step method of all registered components that have one defined
+   /// @return {undefined}
    static Step = function()
    {
       if (instance_exists(parentInstance))
@@ -249,8 +253,8 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       }
    }
    
-   /// @description Executes the Draw method of all registered components that have one defined.
-   /// Components are executed in priority order (lowest to highest).
+   /// @description Executes the Draw method of all registered components that have one defined
+   /// @return {undefined}
    static Draw = function()
    {
       if (instance_exists(parentInstance))
@@ -272,9 +276,8 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       }
    }
    
-   /// @description Executes the Cleanup method of all registered components that have one defined.
-   /// Use this for cleanup operations like destroying data structures, surfaces, or buffers.
-   /// Components are executed in the order they were added.
+   /// @description Executes the Cleanup method of all registered components that have one defined
+   /// @return {undefined}
    static Cleanup = function()
    {
       if (instance_exists(parentInstance))
@@ -286,11 +289,14 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
          }
       }
    }
+   
    #endregion
+   
    #region Enabling / disabling
+   
    /// @description Enables a component
-   /// @param {String} _componentKey The component type name to enable.
-   /// @return {Bool} True if enabled, false if component doesn't exist.
+   /// @param {string} _componentKey The component type name to enable
+   /// @return {bool} True if enabled, false if component doesn't exist
    static EnableComponent = function(_componentKey)
    {
       var _component = GetComponent(_componentKey);
@@ -303,6 +309,8 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       return true;
    }
    
+   /// @description Enables all components in the manager
+   /// @return {undefined}
    static EnableAllComponents = function()
    {
       for (var _i = 0; _i < componentCount; _i++)
@@ -311,6 +319,9 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       }
    }
    
+   /// @description Enables all components except the specified ones
+   /// @param {string,array<string>} _names Single component name or array of component names to exclude
+   /// @return {undefined}
    static EnableAllComponentsExcept = function(_names)
    {
       if (is_array(_names))
@@ -329,6 +340,8 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       }
    }
    
+   /// @description Disables all components in the manager
+   /// @return {undefined}
    static DisableAllComponents = function()
    {
       for (var _i = 0; _i < componentCount; _i++)
@@ -337,6 +350,9 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       }
    }
    
+   /// @description Disables all components except the specified ones
+   /// @param {string,array<string>} _names Single component name or array of component names to exclude
+   /// @return {undefined}
    static DisableAllComponentsExcept = function(_names)
    {
       if (is_array(_names))
@@ -356,8 +372,8 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    }
    
    /// @description Disables a component
-   /// @param {String} _componentKey The component type name to disable.
-   /// @return {Bool} True if disabled, false if component doesn't exist.
+   /// @param {string} _componentKey The component type name to disable
+   /// @return {bool} True if disabled, false if component doesn't exist
    static DisableComponent = function(_componentKey)
    {
       var _component = GetComponent(_componentKey);
@@ -369,78 +385,81 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       _component.enabled = false;
       return true;
    }
+   
    #endregion
+   
    #region Getting Components
-   /// @description Retrieves a component by its type name.
-   /// Returns undefined if the component doesn't exist.
-   /// @param {String} _component The component type name (e.g., "AtxComponentHealth").
-   /// @return {Struct.AtxComponentBase,Undefined} The component struct if found, undefined otherwise.
+   
+   /// @description Retrieves a component by its type name
+   /// @param {string} _component The component type name (e.g., "AtxComponentHealth")
+   /// @return {struct.AtxComponentBase,undefined} The component struct if found, undefined otherwise
    static GetComponent = function(_component)
    {
       var _componentReturn = variable_struct_exists(components, _component) ? components[$ _component] : undefined;
       return _componentReturn;
    }
    
+   /// @description Retrieves all components registered to this manager
+   /// @return {struct} Struct containing all components keyed by their type names
    static GetAllComponents = function()
    {
       return components;
    }
    
-   /// @description Retrieves an array of all the current component keys. 
-   /// @return {Array<String>} Array of component keys.
+   /// @description Retrieves an array of all the current component keys
+   /// @return {array<string>} Array of component keys
    static GetAllComponentKeys = function()
    {
       return componentKeys;
    }
    
-   /// @description Retrieves the number of assigned components.
-   /// @return {Real} The number of components currently registered.
+   /// @description Retrieves the number of assigned components
+   /// @return {real} The number of components currently registered
    static GetComponentCount = function()
    {
       return componentCount;
    }
    
-   /// @description Checks whether a component of the specified type is registered to this manager.
-   /// @param {String} _component The component type name (e.g., "AtxComponentHealth").
-   /// @return {Bool} Returns true if the component exists, false otherwise.
+   /// @description Checks whether a component of the specified type is registered to this manager
+   /// @param {string} _component The component type name (e.g., "AtxComponentHealth")
+   /// @return {bool} Returns true if the component exists, false otherwise
    static HasComponent = function(_component)
    {
       return variable_struct_exists(components, _component);
    }
    
-   /// @description Checks if the component manager has ALL of the specified components.
-   /// Returns true only if every component in the array exists.
-   /// @param {Array<String>} _names Array of component type names to check for.
-   /// @return {Bool} True if all components exist, false if any are missing.
+   /// @description Checks if the component manager has ALL of the specified components
+   /// @param {array<string>} _names Array of component type names to check for
+   /// @return {bool} True if all components exist, false if any are missing
    static HasTheseComponents = function(_names = [])
    {
       var _nameCount = array_length(_names)
       if (_nameCount == 0) return true;
       if (_nameCount > componentCount) return false;
-      for (var _i  = 0; _i < _nameCount; _i++)
+      for (var _i = 0; _i < _nameCount; _i++)
       {
          if (!variable_struct_exists(components, _names[_i])) return false;
       }
       return true;
    }
    
-   /// @description Checks if the component manager has ANY of the specified components.
-   /// @param {Array<String>} _names Array of component type names to check for.
-   /// @return {Bool} True if at least one component exists, false if none exist.
+   /// @description Checks if the component manager has ANY of the specified components
+   /// @param {array<string>} _names Array of component type names to check for
+   /// @return {bool} True if at least one component exists, false if none exist
    static HasAnyOfTheseComponents = function(_names = [])
    {
       var _nameCount = array_length(_names)
       if (_nameCount == 0) return false;
-      for (var _i  = 0; _i < _nameCount; _i++)
+      for (var _i = 0; _i < _nameCount; _i++)
       {
          if (variable_struct_exists(components, _names[_i])) return true;
       }
       return false;
    }
    
-   /// @description Returns all components that have registered for a specific event.
-   /// @param {String} _eventName The event name to check.
-   /// @return {Array<Struct.AtxComponentBase>} Array of components, or empty array if none.
+   /// @description Returns all components that have registered for a specific event
+   /// @param {string} _eventName The event name to check
+   /// @return {array<struct.AtxComponentBase>} Array of components, or empty array if none
    static GetComponentsWithEvent = function(_eventName)
    {
       if (is_array(eventMap[$ _eventName]))
@@ -449,8 +468,14 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       }
       return [];
    }
+   
    #endregion
+   
    #region Sorting
+   
+   /// @description Gets the step priority of a component
+   /// @param {string} _componentKey The component type name
+   /// @return {real,undefined} The step priority value, or undefined if component doesn't exist
    static GetStepPriority = function(_componentKey)
    {
       var _component = GetComponent(_componentKey);
@@ -462,6 +487,9 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       return _component.stepPriority;
    }
    
+   /// @description Gets the draw priority of a component
+   /// @param {string} _componentKey The component type name
+   /// @return {real,undefined} The draw priority value, or undefined if component doesn't exist
    static GetDrawPriority = function(_componentKey)
    {
       var _component = GetComponent(_componentKey);
@@ -473,6 +501,10 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       return _component.drawPriority;
    }
    
+   /// @description Sets the step priority of a component
+   /// @param {string} _componentKey The component type name
+   /// @param {real} _priority The new priority value (lower executes first)
+   /// @return {bool} True if priority was set, false if component doesn't exist
    static SetStepPriority = function(_componentKey, _priority)
    {
       var _component = GetComponent(_componentKey);
@@ -491,6 +523,10 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       return true;
    }
    
+   /// @description Sets the draw priority of a component
+   /// @param {string} _componentKey The component type name
+   /// @param {real} _priority The new priority value (lower executes first)
+   /// @return {bool} True if priority was set, false if component doesn't exist
    static SetDrawPriority = function(_componentKey, _priority)
    {
       var _component = GetComponent(_componentKey);
@@ -509,6 +545,10 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       return true;
    }
    
+   /// @description Sets both the step and draw priority of a component to the same value
+   /// @param {string} _componentKey The component type name
+   /// @param {real} _priority The new priority value (lower executes first)
+   /// @return {bool} True if both priorities were set, false if component doesn't exist
    static SetBothPriority = function(_componentKey, _priority)
    {
       var _stepCheck = SetStepPriority(_componentKey, _priority);
@@ -520,8 +560,8 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       return true;   
    }
    
-   /// @description Sorts step components by priority (low to high).
-   /// Now only sorts component array - 50% less memory usage!
+   /// @description Sorts step components by priority (low to high)
+   /// @return {undefined}
    static SortStepComponents = function()
    {
       var _stepComponentCount = array_length(stepComponents);
@@ -550,7 +590,8 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       stepComponents = _newStepComponents;
    }
    
-   /// @description Sorts draw components by priority (low to high).
+   /// @description Sorts draw components by priority (low to high)
+   /// @return {undefined}
    static SortDrawComponents = function()
    {
       var _drawComponentCount = array_length(drawComponents);
@@ -579,17 +620,15 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       drawComponents = _newDrawComponents;
    }
    
-   // Legacy function names for compatibility
-   static SortStepMethods = SortStepComponents;
-   static SortDrawMethods = SortDrawComponents;
    #endregion
+   
    #region TriggerEvent
-   /// @description Triggers an event across all components that have registered a handler for it.
-   /// Events allow components to communicate without direct references to each other.
-   /// All components with a matching event handler will execute in the order they were added.
-   /// @param {String} _eventName The name of the event to trigger (e.g., "damage", "collect", "interact").
-   /// @param {Any} _eventData The data to pass to all event handlers. Can be any type (struct, array, number, etc.).
-   /// @return {Undefined}
+   
+   /// @description Triggers an event across all components that have registered a handler for it
+   /// @param {string} _eventName The name of the event to trigger (e.g., "damage", "collect", "interact")
+   /// @param {any} _eventData The data to pass to all event handlers
+   /// @param {string} _componentKey Optional specific component to trigger event on, or undefined for all
+   /// @return {undefined}
    static TriggerEvent = function(_eventName, _eventData, _componentKey = undefined)
    {
       if (is_array(eventMap[$ _eventName]))
@@ -613,8 +652,15 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
          }
       }
    }
+   
    #endregion
+   
    #region Querying
+   
+   /// @description Queries components and returns the last non-undefined result
+   /// @param {string} _queryName The name of the query to execute
+   /// @param {struct} _data The data to pass to query handlers
+   /// @return {any} The last non-undefined result, or undefined if no results
    static Query = function(_queryName, _data = {})
    {
       if (!variable_struct_exists(queryMap, _queryName))
@@ -636,6 +682,12 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       }
       return _result;
    }
+   
+   /// @description Queries components with an accumulator pattern to combine results
+   /// @param {string} _queryName The name of the query to execute
+   /// @param {any} _initialValue The starting value for the accumulator
+   /// @param {struct} _data The data to pass to query handlers
+   /// @return {any} The final accumulated value
    static QueryReduce = function(_queryName, _initialValue, _data = {})
    {
       if (!variable_struct_exists(queryMap, _queryName))
@@ -659,8 +711,15 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       
       return _accumulator;
    }
+   
    #endregion
+   
    #region Tagging
+   
+   /// @description Adds a tag to a component for categorization and bulk operations
+   /// @param {string} _componentKey The component type name
+   /// @param {string} _tag The tag to add
+   /// @return {bool} True if tag was added, false if component doesn't exist or already has tag
    static AddTag = function(_componentKey, _tag)
    {
       if (!HasComponent(_componentKey))
@@ -695,8 +754,10 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       
       return true;
    }
-   /// @description Returns an array with references to the components with the tags.
-   /// Caution: these are REFERENCES make sure you don't accidentally edit any of values. 
+   
+   /// @description Returns an array of component keys that have the specified tag
+   /// @param {string} _tag The tag to search for
+   /// @return {array<string>} Array of component keys with this tag, or empty array if none
    static GetComponentsWithTag = function(_tag)
    {
       if (!variable_struct_exists(componentTags, _tag)) 
@@ -706,6 +767,12 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       }
       return componentTags[$ _tag];
    }
+   
+   /// @description Triggers an event on all components with a specific tag
+   /// @param {string} _tag The tag to filter components by
+   /// @param {string} _eventKey The event name to trigger
+   /// @param {any} _data The data to pass to event handlers
+   /// @return {undefined}
    static TriggerEventsWithTag = function(_tag, _eventKey, _data)
    {
       var _componentsWithTag = GetComponentsWithTag(_tag);
@@ -721,6 +788,11 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
          TriggerEvent(_eventKey, _data, _componentKey);
       }
    }
+   
+   /// @description Removes a tag from a component
+   /// @param {string} _componentKey The component type name
+   /// @param {string} _tag The tag to remove
+   /// @return {bool} True if tag was removed, false if component or tag doesn't exist
    static RemoveTag = function(_componentKey, _tag)
    {
       if (!HasComponent(_componentKey))
@@ -743,7 +815,7 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       
       if (!variable_struct_exists(componentTags, _tag))
       {
-         show_debug_message($"AtxComponentManager (RemoveTag): Critical array missmatch, found component and tag in taggedComponents but not in componentTags.");
+         show_debug_message($"AtxComponentManager (RemoveTag): Critical array mismatch, found component and tag in taggedComponents but not in componentTags.");
          return false;
       }
       var _tagComponentArray = componentTags[$ _tag];
@@ -757,13 +829,20 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       if (array_length(_componentTagArray) == 0) variable_struct_remove(taggedComponents, _componentKey); 
       
       return true;  
-   }     
+   }
+   
+   /// @description Checks if a component has a specific tag
+   /// @param {string} _componentKey The component type name
+   /// @param {string} _tag The tag to check for
+   /// @return {bool} True if component has the tag, false otherwise
    static HasTag = function(_componentKey, _tag)
    {
       return (HasComponent(_componentKey) && variable_struct_exists(taggedComponents, _componentKey) && array_contains(taggedComponents[$ _componentKey], _tag));
    }
-   /// @description Returns an array of tags associated with the component.
-   /// CAUTION: Take caution this returns an array of REFERENCES which means they are editable.
+   
+   /// @description Returns an array of all tags associated with a component
+   /// @param {string} _componentKey The component type name
+   /// @return {array<string>} Array of tags, or empty array if component has no tags
    static GetComponentTags = function(_componentKey)
    { 
       if (!HasComponent(_componentKey))
@@ -777,6 +856,10 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       }
       return taggedComponents[$ _componentKey];
    }
+   
+   /// @description Enables all components with a specific tag
+   /// @param {string} _tag The tag to filter components by
+   /// @return {real} The number of components that were enabled
    static EnableComponentsByTag = function(_tag)
    {
       var _componentsWithTag = GetComponentsWithTag(_tag);
@@ -790,6 +873,10 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       }
       return _counter;
    }
+   
+   /// @description Disables all components with a specific tag
+   /// @param {string} _tag The tag to filter components by
+   /// @return {real} The number of components that were disabled
    static DisableComponentsByTag = function(_tag)
    {
       var _componentsWithTag = GetComponentsWithTag(_tag);
@@ -803,6 +890,11 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       }
       return _counter;
    }
+   
+   /// @description Adds multiple tags to a component at once
+   /// @param {string} _componentKey The component type name
+   /// @param {array<string>} _tagArray Array of tags to add
+   /// @return {real} The number of tags that were successfully added
    static AddTags = function(_componentKey, _tagArray)
    {
       if (!HasComponent(_componentKey)) return 0;
@@ -814,16 +906,29 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       }
       return _count;
    }
+   
+   /// @description Gets the number of components that have a specific tag
+   /// @param {string} _tag The tag to count
+   /// @return {real} The number of components with this tag
    static GetTagCount = function(_tag)
    {
       if (!variable_struct_exists(componentTags, _tag)) return 0;
          
       return (array_length(componentTags[$ _tag]));
    }
+   
+   /// @description Returns an array of all unique tags in use
+   /// @return {array<string>} Array of all tag names
    static GetAllTags = function()
    {
       return struct_get_names(componentTags);
    }
+   
+   /// @description Queries components with a specific tag and collects all results
+   /// @param {string} _tag The tag to filter components by
+   /// @param {string} _queryName The name of the query to execute
+   /// @param {struct} _data The data to pass to query handlers
+   /// @return {array} Array of all non-undefined query results
    static QueryByTag = function(_tag, _queryName, _data)
    {
       if (!variable_struct_exists(componentTags, _tag))
@@ -838,7 +943,7 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       var _results = [];
       for (var _i = 0; _i < _componentCount; _i++)
       {
-         var _componentKey =  _componentsWithTag[_i];
+         var _componentKey = _componentsWithTag[_i];
          var _component = GetComponent(_componentKey);
          if (_component == undefined || !_component.enabled || !variable_struct_exists(_component.queries, _queryName)) continue;
          var _query = _component.queries[$ _queryName](_data);
@@ -847,6 +952,13 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       
       return _results;
    }
+   
+   /// @description Queries components with a specific tag using an accumulator pattern
+   /// @param {string} _tag The tag to filter components by
+   /// @param {string} _queryName The name of the query to execute
+   /// @param {any} _initialValue The starting value for the accumulator
+   /// @param {struct} _data The data to pass to query handlers
+   /// @return {any} The final accumulated value
    static QueryReduceByTag = function(_tag, _queryName, _initialValue, _data = {})
    {
       if (!variable_struct_exists(componentTags, _tag))
@@ -861,7 +973,7 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       var _accumulator = _initialValue;
       for (var _i = 0; _i < _componentCount; _i++)
       {
-         var _componentKey =  _componentsWithTag[_i];
+         var _componentKey = _componentsWithTag[_i];
          var _component = GetComponent(_componentKey);
          if (_component == undefined || !_component.enabled || !variable_struct_exists(_component.queries, _queryName)) continue; 
             
@@ -871,12 +983,14 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       }
       return _accumulator;
    }
+   
    #endregion
+   
    #region Helper functions
-   /// @description Internal helper - converts component reference to key
-   /// Supports: component instance OR class name string
-   /// @param {Struct,String} _componentOrKey Component instance or class name
-   /// @return {String} Component key or undefined
+   
+   /// @description Internal helper that converts component reference to key
+   /// @param {struct,string} _componentOrKey Component instance or class name
+   /// @return {string,undefined} Component key or undefined if not found
    static ResolveComponentKey = function(_componentOrKey)
    {
       if (is_struct(_componentOrKey))
@@ -900,8 +1014,14 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       show_debug_message("AtxComponentManager (ResolveComponentKey): Invalid parameter type. Expected component or string.");
       return undefined;
    }
+   
    #endregion
+   
    #region Component Dependencies
+   
+   /// @description Gets an array of dependencies that a component is missing
+   /// @param {struct.AtxComponentBase} _component The component to check
+   /// @return {array<string>} Array of missing dependency names
    static GetMissingDependencies = function(_component)
    {
       var _missing = [];
@@ -919,6 +1039,10 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       
       return _missing;
    }
+   
+   /// @description Checks if a component has all its required dependencies
+   /// @param {struct.AtxComponentBase} _component The component to check
+   /// @return {bool} True if all dependencies are present, false otherwise
    static HasAllDependencies = function(_component)
    {
       var _dependencyCount = array_length(_component.requires);
@@ -928,6 +1052,10 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
          
       return false;
    }
+   
+   /// @description Gets an array of components that depend on a specific component
+   /// @param {string} _componentKey The component type name to check
+   /// @return {array<string>} Array of component names that depend on this component
    static GetDependents = function(_componentKey)
    {
       var _dependents = [];
@@ -941,5 +1069,6 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       }
       return _dependents;
    }
+   
    #endregion
 }
