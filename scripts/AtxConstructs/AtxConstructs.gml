@@ -247,7 +247,7 @@ function AtxDeleteConstruct(_constructName)
 /// @function AtxSaveConstructsToFile
 /// @description Saves all registered constructs to a JSON file
 /// @param {string} _fileName The file path to save to
-/// @return {undefined}
+/// @return {void}
 function AtxSaveConstructsToFile(_fileName)
 {
    var _saveData = {};
@@ -279,7 +279,7 @@ function AtxSaveConstructsToFile(_fileName)
 /// @description Loads constructs from a JSON file into the registry
 /// @param {string} _fileName The file path to load from
 /// @param {bool} _clearExisting Whether to clear existing constructs before loading
-/// @return {undefined}
+/// @return {void}
 function AtxLoadConstructsFromFile(_fileName, _clearExisting = true)
 {
    if (!file_exists(_fileName))

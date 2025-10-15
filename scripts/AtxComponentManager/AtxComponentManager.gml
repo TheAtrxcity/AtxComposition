@@ -223,6 +223,8 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       if (_index != -1) array_delete(componentKeys, _index, 1);
       componentCount--;
       
+      delete _component;
+      
       return true;
    }
    
@@ -231,7 +233,7 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    #region Lifecycle Methods
    
    /// @description Executes the Step method of all registered components that have one defined
-   /// @return {undefined}
+   /// @return {void}
    static Step = function()
    {
       if (instance_exists(parentInstance))
@@ -254,7 +256,7 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    }
    
    /// @description Executes the Draw method of all registered components that have one defined
-   /// @return {undefined}
+   /// @return {void}
    static Draw = function()
    {
       if (instance_exists(parentInstance))
@@ -277,7 +279,7 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    }
    
    /// @description Executes the Cleanup method of all registered components that have one defined
-   /// @return {undefined}
+   /// @return {void}
    static Cleanup = function()
    {
       if (instance_exists(parentInstance))
@@ -310,7 +312,7 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    }
    
    /// @description Enables all components in the manager
-   /// @return {undefined}
+   /// @return {void}
    static EnableAllComponents = function()
    {
       for (var _i = 0; _i < componentCount; _i++)
@@ -321,7 +323,7 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    
    /// @description Enables all components except the specified ones
    /// @param {string,array<string>} _names Single component name or array of component names to exclude
-   /// @return {undefined}
+   /// @return {void}
    static EnableAllComponentsExcept = function(_names)
    {
       if (is_array(_names))
@@ -341,7 +343,7 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    }
    
    /// @description Disables all components in the manager
-   /// @return {undefined}
+   /// @return {void}
    static DisableAllComponents = function()
    {
       for (var _i = 0; _i < componentCount; _i++)
@@ -352,7 +354,7 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    
    /// @description Disables all components except the specified ones
    /// @param {string,array<string>} _names Single component name or array of component names to exclude
-   /// @return {undefined}
+   /// @return {void}
    static DisableAllComponentsExcept = function(_names)
    {
       if (is_array(_names))
@@ -561,65 +563,31 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    }
    
    /// @description Sorts step components by priority (low to high)
-   /// @return {undefined}
+   /// @return {void}
    static SortStepComponents = function()
    {
       var _stepComponentCount = array_length(stepComponents);
       if (_stepComponentCount <= 1) return;
-         
-      var _indices = [];
-      for (var _i = 0; _i < _stepComponentCount; _i++) 
+      
+      array_sort(stepComponents, function(_a, _b) 
       {
-         _indices[_i] = _i;
-      }
-      
-      array_sort(_indices, function(_a, _b) 
-      {
-         var _compA = stepComponents[_a].stepPriority;
-         var _compB = stepComponents[_b].stepPriority;
-         return (_compA - _compB);
-      })
-      
-      var _newStepComponents = array_create(_stepComponentCount);
-      
-      for (var _i = 0; _i < _stepComponentCount; _i++)
-      {
-         _newStepComponents[_i] = stepComponents[_indices[_i]];
-      }
-      
-      stepComponents = _newStepComponents;
+         return _a.stepPriority - _b.stepPriority;
+      });
    }
    
    /// @description Sorts draw components by priority (low to high)
-   /// @return {undefined}
+   /// @return {void}
    static SortDrawComponents = function()
    {
       var _drawComponentCount = array_length(drawComponents);
       if (_drawComponentCount <= 1) return;
-         
-      var _indices = [];
-      for (var _i = 0; _i < _drawComponentCount; _i++) 
+      
+      array_sort(drawComponents, function(_a, _b) 
       {
-         _indices[_i] = _i;
-      }
-      
-      array_sort(_indices, function(_a, _b) 
-      {
-         var _compA = drawComponents[_a].drawPriority;
-         var _compB = drawComponents[_b].drawPriority;
-         return (_compA - _compB);
-      })
-      
-      var _newDrawComponents = array_create(_drawComponentCount);
-      
-      for (var _i = 0; _i < _drawComponentCount; _i++)
-      {
-         _newDrawComponents[_i] = drawComponents[_indices[_i]];
-      }
-      
-      drawComponents = _newDrawComponents;
+         return _a.drawPriority - _b.drawPriority;
+      });
    }
-   
+      
    #endregion
    
    #region TriggerEvent
@@ -628,7 +596,7 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    /// @param {string} _eventName The name of the event to trigger (e.g., "damage", "collect", "interact")
    /// @param {any} _eventData The data to pass to all event handlers
    /// @param {string} _componentKey Optional specific component to trigger event on, or undefined for all
-   /// @return {undefined}
+   /// @return {void}
    static TriggerEvent = function(_eventName, _eventData, _componentKey = undefined)
    {
       if (is_array(eventMap[$ _eventName]))
@@ -772,7 +740,7 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    /// @param {string} _tag The tag to filter components by
    /// @param {string} _eventKey The event name to trigger
    /// @param {any} _data The data to pass to event handlers
-   /// @return {undefined}
+   /// @return {void}
    static TriggerEventsWithTag = function(_tag, _eventKey, _data)
    {
       var _componentsWithTag = GetComponentsWithTag(_tag);

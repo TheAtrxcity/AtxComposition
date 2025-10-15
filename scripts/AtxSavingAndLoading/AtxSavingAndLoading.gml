@@ -1,6 +1,6 @@
 /// @function AtxInitialiseSaveSystem
 /// @description Initializes the save system and creates the save directory if it doesn't exist
-/// @return {undefined}
+/// @return {void}
 function AtxInitialiseSaveSystem()
 {
    if (!directory_exists(global.__atxSaveConfig.saveDirectory))
@@ -99,7 +99,7 @@ function AtxSaveGame(_saveName, _slotNumber = 0)
    
    var _jsonString = json_stringify(_saveData, true);
    
-   var _fileName = global.__atxSaveConfig.saveDirectory + "save_" + string(_slotNumber) + ".json";
+   var _fileName = $"{global.__atxSaveConfig.saveDirectory}save_{_slotNumber}.json";
    var _buffer = buffer_create(string_byte_length(_jsonString) + 1, buffer_fixed, 1);
    buffer_write(_buffer, buffer_string, _jsonString);
    buffer_save(_buffer, _fileName);
@@ -117,7 +117,7 @@ function AtxSaveGame(_saveName, _slotNumber = 0)
 
 /// @function AtxClearSaveableEntities
 /// @description Destroys all non-persistent entities that have save enabled
-/// @return {undefined}
+/// @return {void}
 function AtxClearSaveableEntities()
 {
    var _counter = 0;
@@ -138,9 +138,14 @@ function AtxClearSaveableEntities()
 /// @return {bool} True if load was initiated, false if failed
 function AtxLoadGame(_slotNumber = 0, _clearRoom = true)
 {
+   if (global.__atxPendingLoad.loading)
+   {
+       show_debug_message("AtxLoadGame: Load already in progress!");
+       return false;
+   }
    show_debug_message($"AtxLoadGame: Attempting to load data from {_slotNumber}");
    global.__atxPendingLoad.startTime = get_timer();
-   var _fileName = global.__atxSaveConfig.saveDirectory + "save_" + string(_slotNumber) + ".json";
+   var _fileName = $"{global.__atxSaveConfig.saveDirectory}save_{_slotNumber}.json";
    if (!file_exists(_fileName))
    {
       show_debug_message("AtxLoadGame: Trying to load from a filename that doesn't exist!")
@@ -181,7 +186,7 @@ function AtxLoadGame(_slotNumber = 0, _clearRoom = true)
 
 /// @function AtxLoadGamePhase2
 /// @description Internal function that handles the second phase of loading after room transition
-/// @return {undefined}
+/// @return {void}
 function AtxLoadGamePhase2()
 {
    show_debug_message("AtxLoadGamePhase2: Starting Phase 2...");
@@ -327,7 +332,7 @@ function AtxLoadGamePhase2()
 /// @return {bool} True if save exists, false otherwise
 function AtxSaveExists(_slotNumber = 0)
 {
-   var _fileName = global.__atxSaveConfig.saveDirectory + "save_" + string(_slotNumber) + ".json";
+   var _fileName = $"{global.__atxSaveConfig.saveDirectory}save_{_slotNumber}.json";
    if (file_exists(_fileName)) return true;
    return false;
 }
@@ -338,7 +343,7 @@ function AtxSaveExists(_slotNumber = 0)
 /// @return {bool} True if deletion succeeded, false if file didn't exist
 function AtxDeleteSave(_slotNumber = 0)
 {
-   var _fileName = global.__atxSaveConfig.saveDirectory + "save_" + string(_slotNumber) + ".json";
+   var _fileName = $"{global.__atxSaveConfig.saveDirectory}save_{_slotNumber}.json";
    if (file_exists(_fileName))
    {
       file_delete(_fileName);
@@ -353,7 +358,7 @@ function AtxDeleteSave(_slotNumber = 0)
 /// @return {struct,undefined} Metadata struct if found, undefined otherwise
 function AtxGetSaveMetadata(_slotNumber = 0)
 {
-   var _fileName = global.__atxSaveConfig.saveDirectory + "save_" + string(_slotNumber) + ".json";
+   var _fileName = $"{global.__atxSaveConfig.saveDirectory}save_{_slotNumber}.json";
    if (file_exists(_fileName))
    {
       var _buffer = buffer_load(_fileName);
@@ -401,7 +406,7 @@ function AtxValidateSave(_slotNumber = 0)
 {
    if (AtxSaveExists(_slotNumber))
    {
-      var _fileName = global.__atxSaveConfig.saveDirectory + "save_" + string(_slotNumber) + ".json";
+      var _fileName = $"{global.__atxSaveConfig.saveDirectory}save_{_slotNumber}.json";
       var _saveData = undefined;
       try
       {
@@ -462,8 +467,6 @@ function AtxGetSaveDataComponent(_component)
       var _currentVariable = _component[$ _propertyName];
       
       if (is_method(_currentVariable)) continue;
-      
-      if (_propertyName == "owner") continue;
       if (_propertyName == "parentInstance") continue;        
       if (_propertyName == "componentManager") continue;        
       if (_propertyName == "events") continue;                 
@@ -487,7 +490,7 @@ function AtxGetSaveDataComponent(_component)
 /// @description Restores component data from a saved data struct
 /// @param {struct.AtxComponentBase} _component The component to restore data to
 /// @param {struct} _data The saved data struct to restore from
-/// @return {undefined}
+/// @return {void}
 function AtxSetSaveDataComponent(_component, _data)             
 {
    var _variables = variable_struct_get_names(_data);
