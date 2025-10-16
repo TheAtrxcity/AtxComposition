@@ -1,6 +1,6 @@
 /// @function AtxInitialiseSaveSystem
 /// @description Initializes the save system and creates the save directory if it doesn't exist
-/// @return {void}
+/// @return {undefined}
 function AtxInitialiseSaveSystem()
 {
    if (!directory_exists(global.__atxSaveConfig.saveDirectory))
@@ -117,7 +117,7 @@ function AtxSaveGame(_saveName, _slotNumber = 0)
 
 /// @function AtxClearSaveableEntities
 /// @description Destroys all non-persistent entities that have save enabled
-/// @return {void}
+/// @return {undefined}
 function AtxClearSaveableEntities()
 {
    var _counter = 0;
@@ -159,11 +159,12 @@ function AtxLoadGame(_slotNumber = 0, _clearRoom = true)
    
    show_debug_message($"AtxLoadGame: Loading in the following data.\nSave Name: {_saveData.metaData.saveName}"
    + $"\nTime: {date_date_string(_saveData.metaData.timeStamp)} at {date_datetime_string(_saveData.metaData.timeStamp)}"
-   + $"Room: {_saveData.metaData.roomName}\nConstruct Count: {array_length(_saveData.constructs)}");
+   + $"\nRoom: {_saveData.metaData.roomName}\nConstruct Count: {array_length(_saveData.constructs)}");
    
    global.__atxPendingLoad.constructCount = array_length(_saveData.constructs);
-   
+
    var _roomIndex = asset_get_index(_saveData.metaData.roomName);
+   // feather ignore GM1041
    if (!room_exists(_roomIndex)) 
    {
       show_debug_message("AtxLoadGame: Room doesn't exist.");
@@ -186,7 +187,7 @@ function AtxLoadGame(_slotNumber = 0, _clearRoom = true)
 
 /// @function AtxLoadGamePhase2
 /// @description Internal function that handles the second phase of loading after room transition
-/// @return {void}
+/// @return {undefined}
 function AtxLoadGamePhase2()
 {
    show_debug_message("AtxLoadGamePhase2: Starting Phase 2...");
@@ -258,6 +259,7 @@ function AtxLoadGamePhase2()
          {
             if (variable_struct_exists(_constructReference, "layer"))
             {
+               // feather ignore GM1041
                _construct = instance_create_layer(_constructReference.x, _constructReference.y, _constructReference.layer, _constructObjectIndex);
             }
             else if (variable_struct_exists(_constructReference, "depth"))
@@ -289,7 +291,7 @@ function AtxLoadGamePhase2()
       _construct.depth = _constructReference.depth;
       _construct.manager.savePriority = _constructReference.savePriority;
       _construct.manager.constructReference = _constructReference.constructName;
-      _construct.manager.saveMetaData = _constructReference.metaData;
+      _construct.manager.saveMetadata = _constructReference.metaData;
       var _componentKeys = variable_struct_get_names(_constructReference.components);
       var _componentCount = array_length(_componentKeys);
       for (var _j = 0; _j < _componentCount; _j++)
@@ -304,7 +306,14 @@ function AtxLoadGamePhase2()
          else 
          {
             var _component = _construct.manager.AddComponent(_componentKey);
-            AtxSetSaveDataComponent(_component, _componentData);
+            if (_component != undefined)
+            {
+               AtxSetSaveDataComponent(_component, _componentData);
+            }
+            else
+            {
+               show_debug_message($"AtxLoadGamePhase2: Failed to add component {_componentKey} during load.");
+            }
          }
       }
       _counter++;
@@ -367,6 +376,7 @@ function AtxGetSaveMetadata(_slotNumber = 0)
       var _jsonParsed = json_parse(_jsonString);
       if (variable_struct_exists(_jsonParsed, "metaData"))
       {
+         // feather ignore GM1045
          return _jsonParsed.metaData;
       }
       return undefined;
@@ -490,16 +500,27 @@ function AtxGetSaveDataComponent(_component)
 /// @description Restores component data from a saved data struct
 /// @param {struct.AtxComponentBase} _component The component to restore data to
 /// @param {struct} _data The saved data struct to restore from
-/// @return {void}
+/// @return {undefined}
 function AtxSetSaveDataComponent(_component, _data)             
 {
+   if (_component == undefined)
+   {
+      show_debug_message("AtxSetSaveDataComponent: Component is undefined!");
+      return;
+   }
+   
+   if (_data == undefined || !is_struct(_data))
+   {
+      show_debug_message("AtxSetSaveDataComponent: Data is invalid!");
+      return;
+   }
+   
    var _variables = variable_struct_get_names(_data);
    var _variableCount = array_length(_variables);
    for (var _i = 0; _i < _variableCount; _i++)
    {
       var _variableName = _variables[_i];
       var _value = _data[$ _variableName];
-      
       _component[$ _variableName] = _value;
    }
 }

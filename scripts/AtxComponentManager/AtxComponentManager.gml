@@ -151,10 +151,8 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
             {
                var _tagComponentArray = componentTags[_tag];
                var _tagIndex = array_get_index(_tagComponentArray, _componentKey);
-               {
-                  array_delete(_tagComponentArray, _tagIndex, 1);
-                  if (array_length(_tagComponentArray) == 0) variable_struct_remove(componentTags, _tag)
-               }
+               array_delete(_tagComponentArray, _tagIndex, 1);
+               if (array_length(_tagComponentArray) == 0) variable_struct_remove(componentTags, _tag)
             }
          }
          variable_struct_remove(taggedComponents, _componentKey);
@@ -233,7 +231,7 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    #region Lifecycle Methods
    
    /// @description Executes the Step method of all registered components that have one defined
-   /// @return {void}
+   /// @return {undefined}
    static Step = function()
    {
       if (instance_exists(parentInstance))
@@ -256,7 +254,7 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    }
    
    /// @description Executes the Draw method of all registered components that have one defined
-   /// @return {void}
+   /// @return {undefined}
    static Draw = function()
    {
       if (instance_exists(parentInstance))
@@ -279,7 +277,7 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    }
    
    /// @description Executes the Cleanup method of all registered components that have one defined
-   /// @return {void}
+   /// @return {undefined}
    static Cleanup = function()
    {
       if (instance_exists(parentInstance))
@@ -312,7 +310,7 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    }
    
    /// @description Enables all components in the manager
-   /// @return {void}
+   /// @return {undefined}
    static EnableAllComponents = function()
    {
       for (var _i = 0; _i < componentCount; _i++)
@@ -323,7 +321,7 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    
    /// @description Enables all components except the specified ones
    /// @param {string,array<string>} _names Single component name or array of component names to exclude
-   /// @return {void}
+   /// @return {undefined}
    static EnableAllComponentsExcept = function(_names)
    {
       if (is_array(_names))
@@ -343,7 +341,7 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    }
    
    /// @description Disables all components in the manager
-   /// @return {void}
+   /// @return {undefined}
    static DisableAllComponents = function()
    {
       for (var _i = 0; _i < componentCount; _i++)
@@ -354,7 +352,7 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    
    /// @description Disables all components except the specified ones
    /// @param {string,array<string>} _names Single component name or array of component names to exclude
-   /// @return {void}
+   /// @return {undefined}
    static DisableAllComponentsExcept = function(_names)
    {
       if (is_array(_names))
@@ -563,7 +561,7 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    }
    
    /// @description Sorts step components by priority (low to high)
-   /// @return {void}
+   /// @return {undefined}
    static SortStepComponents = function()
    {
       var _stepComponentCount = array_length(stepComponents);
@@ -576,7 +574,7 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    }
    
    /// @description Sorts draw components by priority (low to high)
-   /// @return {void}
+   /// @return {undefined}
    static SortDrawComponents = function()
    {
       var _drawComponentCount = array_length(drawComponents);
@@ -596,7 +594,7 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    /// @param {string} _eventName The name of the event to trigger (e.g., "damage", "collect", "interact")
    /// @param {any} _eventData The data to pass to all event handlers
    /// @param {string} _componentKey Optional specific component to trigger event on, or undefined for all
-   /// @return {void}
+   /// @return {undefined}
    static TriggerEvent = function(_eventName, _eventData, _componentKey = undefined)
    {
       if (is_array(eventMap[$ _eventName]))
@@ -740,7 +738,7 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    /// @param {string} _tag The tag to filter components by
    /// @param {string} _eventKey The event name to trigger
    /// @param {any} _data The data to pass to event handlers
-   /// @return {void}
+   /// @return {undefined}
    static TriggerEventsWithTag = function(_tag, _eventKey, _data)
    {
       var _componentsWithTag = GetComponentsWithTag(_tag);

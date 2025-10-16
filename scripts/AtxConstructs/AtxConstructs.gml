@@ -62,7 +62,7 @@ function AtxCreateConstruct(_constructName, _config = {})
 /// @description Creates a component instance from a configuration struct
 /// @param {string} _componentName The name of the component constructor function
 /// @param {struct} _componentConfig Configuration struct with property values to set
-/// @return {struct.AtxComponentBase,undefined} The created component instance, or undefined if failed
+/// @return {struct,undefined} The created component instance, or undefined if failed
 function AtxCreateComponentFromConfig(_componentName, _componentConfig)
 {
    var _componentReference = variable_global_get(_componentName);
@@ -147,7 +147,7 @@ function AtxSpawnConstruct(_constructName, _x, _y, _layerOrDepthOverride = undef
    
    _constructInstanceReference.manager.constructReference = _constructName;
    
-   if (variable_instance_exists(_construct, "savePriority"))
+   if (variable_struct_exists(_construct, "savePriority"))
    {
       _constructInstanceReference.manager.savePriority = _construct.savePriority;
    }
@@ -204,10 +204,14 @@ function AtxSpawnConstruct(_constructName, _x, _y, _layerOrDepthOverride = undef
 /// @function AtxGetConstruct
 /// @description Retrieves a construct configuration from the registry
 /// @param {string} _constructName The name of the construct to retrieve
-/// @return {struct,undefined} The construct configuration struct, or undefined if not found
+/// @return {any} The construct configuration struct, or undefined if not found
 function AtxGetConstruct(_constructName)
 {
-   if (AtxConstructExists(_constructName)) return (global.__atxConstructRegistry[$ _constructName])
+   if (AtxConstructExists(_constructName)) 
+   {
+      return global.__atxConstructRegistry[$ _constructName];
+   }
+   return undefined;
 }
 
 /// @function AtxGetAllConstructs
@@ -224,12 +228,7 @@ function AtxGetAllConstructs()
 /// @return {bool} True if construct exists, false otherwise
 function AtxConstructExists(_constructName)
 {
-   if (!variable_struct_exists(global.__atxConstructRegistry, _constructName))
-   {
-      show_debug_message($"AtxConstructExists: Could not find construct {_constructName} inside the construct registry.");
-      return false;
-   }
-   return true;
+   return variable_struct_exists(global.__atxConstructRegistry, _constructName);
 }
 
 /// @function AtxDeleteConstruct
@@ -247,7 +246,7 @@ function AtxDeleteConstruct(_constructName)
 /// @function AtxSaveConstructsToFile
 /// @description Saves all registered constructs to a JSON file
 /// @param {string} _fileName The file path to save to
-/// @return {void}
+/// @return {undefined}
 function AtxSaveConstructsToFile(_fileName)
 {
    var _saveData = {};
@@ -279,7 +278,7 @@ function AtxSaveConstructsToFile(_fileName)
 /// @description Loads constructs from a JSON file into the registry
 /// @param {string} _fileName The file path to load from
 /// @param {bool} _clearExisting Whether to clear existing constructs before loading
-/// @return {void}
+/// @return {undefined}
 function AtxLoadConstructsFromFile(_fileName, _clearExisting = true)
 {
    if (!file_exists(_fileName))
