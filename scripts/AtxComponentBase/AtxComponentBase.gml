@@ -12,14 +12,17 @@ function AtxComponentBase() constructor
    // 200+      : Late Step
    stepPriority = 100;
    
-   // Think of draw priority as the draw order.
-   // Lower numbers will be drawn first higher numbers last. 
+   // Think of draw priority as the draw order
+   // Lower numbers will be drawn first higher numbers last
    drawPriority = 100;
+   
+   DrawGUIPriority = 100;
    
    requires = [];
    
    Step = undefined;
    Draw = undefined;
+   DrawGUI = undefined;
    Cleanup = undefined;
    
    static SetParent = function (_componentManager) 

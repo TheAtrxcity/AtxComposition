@@ -1,11 +1,12 @@
 /// @function AtxComponentManager
 /// @description Component Manager for managing object components with lifecycle methods, events, and queries
+/// @param _caller The instance calling this constructor
 /// @param {bool} _enableSave Whether this construct should be saved to disk
 /// @param {real} _priority Save priority for load order (lower numbers load first)
 /// @return {struct.AtxComponentManager}
-function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) constructor
+function AtxComponentManager(_caller, _enableSave = true, _priority = ATX_SAVE.DEFAULT) constructor
 {
-   parentInstance = self;
+   parentInstance = _caller;
    
    savePriority = _priority;
    enableSave = _enableSave;
@@ -19,10 +20,12 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    
    stepComponents = [];
    drawComponents = [];
+   drawGUIComponents = [];
    cleanupComponents = [];
    
    stepNeedsSort = false;
    drawNeedsSort = false;
+   drawGUINeedsSort = false;
    
    componentTags = {};
    taggedComponents = {};
@@ -34,8 +37,9 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    
    /// @description Adds a component to the component manager
    /// @param {struct.AtxComponentBase} _component The component instance to add (must be created with 'new')
+   /// @param {struct} _overrides Optional struct containing property overrides to apply to the component
    /// @return {struct.AtxComponentBase} Returns the added component for chaining, or undefined if component already exists
-   static AddComponent = function(_component)
+   static AddComponent = function(_component, _overrides = undefined)
    {
       var _componentKey = instanceof(_component);
       if (variable_struct_exists(components, _componentKey))
@@ -47,12 +51,25 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       if (!HasAllDependencies(_component))
       {
          var _missing = GetMissingDependencies(_component);
-         show_debug_message($"AtxComponentManager (AddComponent): Couldn't add component because of missing dependencies. {_componentKey}" +
-         $" needs the following dependencies:\n{_missing}");
+         show_debug_message($"AtxComponentManager (AddComponent): {parentInstance.object_index}"+
+         "\nCouldn't add component because of missing dependencies. Is order wrong or are components missing?"+
+         $"\n{_componentKey} needs the following dependencies:\n{_missing}");
          return undefined;
       }
       
       _component.SetParent(self);
+      
+      if (_overrides != undefined && is_struct(_overrides))
+      {
+         var _overrideKeys = variable_struct_get_names(_overrides);
+         var _overrideCount = array_length(_overrideKeys);
+         for (var _i = 0; _i < _overrideCount; _i++)
+         {
+            var _key = _overrideKeys[_i];
+            _component[$ _key] = _overrides[$ _key];
+         }
+      }
+      
       components[$ _componentKey] = _component;
       componentCount++;
       
@@ -68,6 +85,12 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       {
          array_push(drawComponents, _component);
          drawNeedsSort = true;
+      }
+      
+      if (is_method(_component.DrawGUI))
+      {
+         array_push(drawGUIComponents, _component);
+         drawGUINeedsSort = true;
       }
       
       if (is_method(_component.Cleanup))
@@ -176,6 +199,15 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
          }
       }
       
+      if (is_method(_component.DrawGUI))
+      {
+         var _index = array_get_index(drawGUIComponents, _component);
+         if (_index != -1) 
+         {
+            array_delete(drawGUIComponents, _index, 1);
+         }
+      }
+      
       if (is_method(_component.Cleanup))
       {
          var _index = array_get_index(cleanupComponents, _component);
@@ -271,6 +303,29 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
             if (drawComponents[_i].enabled)
             {
                drawComponents[_i].Draw();
+            }
+         }
+      }
+   }
+   
+   /// @description Executes the DrawGUI method of all registered components that have one defined
+   /// @return {undefined}
+   static DrawGUI = function()
+   {
+      if (instance_exists(parentInstance))
+      {
+         if (drawGUINeedsSort)
+         {
+            SortDrawGUIComponents();
+            drawGUINeedsSort = false;
+         }
+         
+         var _drawGUICount = array_length(drawGUIComponents);
+         for (var _i = 0; _i < _drawGUICount; _i++)
+         {
+            if (drawGUIComponents[_i].enabled)
+            {
+               drawGUIComponents[_i].DrawGUI();
             }
          }
       }
@@ -501,6 +556,20 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       return _component.drawPriority;
    }
    
+   /// @description Gets the drawGUI priority of a component
+   /// @param {string} _componentKey The component type name
+   /// @return {real,undefined} The drawGUI priority value, or undefined if component doesn't exist
+   static GetDrawGUIPriority = function(_componentKey)
+   {
+      var _component = GetComponent(_componentKey);
+      if (_component == undefined)
+      {
+         show_debug_message("AtxComponentManager (GetDrawGUIPriority): Couldn't find component returning undefined.");
+         return undefined;
+      }
+      return _component.drawGUIPriority;
+   }
+   
    /// @description Sets the step priority of a component
    /// @param {string} _componentKey The component type name
    /// @param {real} _priority The new priority value (lower executes first)
@@ -545,6 +614,28 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       return true;
    }
    
+   /// @description Sets the drawGUI priority of a component
+   /// @param {string} _componentKey The component type name
+   /// @param {real} _priority The new priority value (lower executes first)
+   /// @return {bool} True if priority was set, false if component doesn't exist
+   static SetDrawGUIPriority = function(_componentKey, _priority)
+   {
+      var _component = GetComponent(_componentKey);
+      if (_component == undefined)
+      {
+         show_debug_message("AtxComponentManager (SetDrawGUIPriority): Couldn't find component returning false.")
+         return false;
+      }
+      
+      _component.drawGUIPriority = _priority;
+      if (is_method(_component.DrawGUI))
+      {
+         drawGUINeedsSort = true;
+      }
+      
+      return true;
+   }
+   
    /// @description Sets both the step and draw priority of a component to the same value
    /// @param {string} _componentKey The component type name
    /// @param {real} _priority The new priority value (lower executes first)
@@ -556,6 +647,23 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       var _drawCheck = SetDrawPriority(_componentKey, _priority);
       if (_drawCheck == false) {show_debug_message("AtxComponentManager(SetBothPriority): Setting Draw Failed")}
       if (!_stepCheck || !_drawCheck) return false; 
+         
+      return true;   
+   }
+   
+   /// @description Sets all priorities (step, draw, and drawGUI) of a component to the same value
+   /// @param {string} _componentKey The component type name
+   /// @param {real} _priority The new priority value (lower executes first)
+   /// @return {bool} True if all priorities were set, false if component doesn't exist
+   static SetAllPriority = function(_componentKey, _priority)
+   {
+      var _stepCheck = SetStepPriority(_componentKey, _priority);
+      if (_stepCheck == false) {show_debug_message("AtxComponentManager(SetAllPriority): Setting Step Failed")}
+      var _drawCheck = SetDrawPriority(_componentKey, _priority);
+      if (_drawCheck == false) {show_debug_message("AtxComponentManager(SetAllPriority): Setting Draw Failed")}
+      var _drawGUICheck = SetDrawGUIPriority(_componentKey, _priority);
+      if (_drawGUICheck == false) {show_debug_message("AtxComponentManager(SetAllPriority): Setting DrawGUI Failed")}
+      if (!_stepCheck || !_drawCheck || !_drawGUICheck) return false; 
          
       return true;   
    }
@@ -583,6 +691,19 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       array_sort(drawComponents, function(_a, _b) 
       {
          return _a.drawPriority - _b.drawPriority;
+      });
+   }
+   
+   /// @description Sorts drawGUI components by priority (low to high)
+   /// @return {undefined}
+   static SortDrawGUIComponents = function()
+   {
+      var _drawGUIComponentCount = array_length(drawGUIComponents);
+      if (_drawGUIComponentCount <= 1) return;
+      
+      array_sort(drawGUIComponents, function(_a, _b) 
+      {
+         return _a.drawGUIPriority - _b.drawGUIPriority;
       });
    }
       
@@ -623,10 +744,10 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    
    #region Querying
    
-   /// @description Queries components and returns the last non-undefined result
+   /// @description Queries components and returns all the results in an array.
    /// @param {string} _queryName The name of the query to execute
    /// @param {struct} _data The data to pass to query handlers
-   /// @return {any} The last non-undefined result, or undefined if no results
+   /// @return {array} An array of results. 
    static Query = function(_queryName, _data = {})
    {
       if (!variable_struct_exists(queryMap, _queryName))
@@ -637,6 +758,7 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
       var _result = undefined;
       var _handlers = queryMap[$ _queryName];
       var _queryCount = array_length(_handlers);
+      var _results = [];
       for (var _i = 0; _i < _queryCount; _i++)
       {
          var _handler = _handlers[_i];
@@ -644,9 +766,34 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
          if (!_component.enabled) continue;
          var _method = _handler.method;
          var _returnValue = _method(_data);
-         if (_returnValue != undefined) _result = _returnValue; 
+         if (_returnValue != undefined) array_push(_results, _returnValue); 
       }
-      return _result;
+      return _results;
+   }
+   
+   /// @description Queries components and collects the first result
+   /// @param {string} _queryName The name of the query to execute
+   /// @param {struct} _data The data to pass to query handlers
+   /// @return {any} Returns the first result or undefined if no results
+   static QueryFirst = function(_queryName, _data = {})
+   {
+      if (!variable_struct_exists(queryMap, _queryName))
+      {
+         show_debug_message("AtxComponentManager (QueryFirst): Couldn't find query.")
+         return undefined;
+      }
+      var _handlers = queryMap[$ _queryName];
+      var _queryCount = array_length(_handlers);
+      for (var _i = 0; _i < _queryCount; _i++)
+      {
+         var _handler = _handlers[_i];
+         var _component = _handler.component;
+         if (!_component.enabled) continue;
+         var _method = _handler.method;
+         var _returnValue = _method(_data);
+         if (_returnValue != undefined) return _returnValue;
+      }
+      return undefined;
    }
    
    /// @description Queries components with an accumulator pattern to combine results
@@ -675,6 +822,94 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
          if (_returnValue != undefined) _accumulator = _returnValue; 
       }
       
+      return _accumulator;
+   }
+   
+   /// @description Queries components with a specific tag collects the first result
+   /// @param {string} _tag The tag to filter components by
+   /// @param {string} _queryName The name of the query to execute
+   /// @param {struct} _data The data to pass to query handlers
+   /// @return {array} Array of all non-undefined query results
+   static QueryByTag = function(_tag, _queryName, _data)
+   {
+      if (!variable_struct_exists(componentTags, _tag))
+      {
+         show_debug_message($"AtxComponentManager (QueryByTag): Tag {_tag} has no components.");
+         return [];
+      }
+      var _componentsWithTag = GetComponentsWithTag(_tag);
+      var _componentCount = array_length(_componentsWithTag);
+      if (_componentCount == 0) return [];
+         
+      var _results = [];
+      for (var _i = 0; _i < _componentCount; _i++)
+      {
+         var _componentKey = _componentsWithTag[_i];
+         var _component = GetComponent(_componentKey);
+         if (_component == undefined || !_component.enabled || !variable_struct_exists(_component.queries, _queryName)) continue;
+         var _query = _component.queries[$ _queryName](_data);
+         if (_query != undefined) array_push(_results, _query);
+      }
+      
+      return _results;
+   }
+   
+   /// @description Queries components with a specific tag and collects first result
+   /// @param {string} _tag The tag to filter components by
+   /// @param {string} _queryName The name of the query to execute
+   /// @param {struct} _data The data to pass to query handlers
+   /// @return {any} Returns first result
+   static QueryByTagFirst = function(_tag, _queryName, _data)
+   {
+      if (!variable_struct_exists(componentTags, _tag))
+      {
+         show_debug_message($"AtxComponentManager (QueryByTagFirst): Tag {_tag} has no components.");
+         return undefined;
+      }
+      var _componentsWithTag = GetComponentsWithTag(_tag);
+      var _componentCount = array_length(_componentsWithTag);
+      if (_componentCount == 0) return undefined;
+         
+      for (var _i = 0; _i < _componentCount; _i++)
+      {
+         var _componentKey = _componentsWithTag[_i];
+         var _component = GetComponent(_componentKey);
+         if (_component == undefined || !_component.enabled || !variable_struct_exists(_component.queries, _queryName)) continue;
+         var _query = _component.queries[$ _queryName](_data);
+         if (_query != undefined) return _query;
+      }
+      
+      return undefined;
+   }
+   
+   /// @description Queries components with a specific tag using an accumulator pattern
+   /// @param {string} _tag The tag to filter components by
+   /// @param {string} _queryName The name of the query to execute
+   /// @param {any} _initialValue The starting value for the accumulator
+   /// @param {struct} _data The data to pass to query handlers
+   /// @return {any} The final accumulated value
+   static QueryReduceByTag = function(_tag, _queryName, _initialValue, _data = {})
+   {
+      if (!variable_struct_exists(componentTags, _tag))
+      {
+         show_debug_message($"AtxComponentManager (QueryReduceByTag): Tag {_tag} has no components.");
+         return _initialValue;
+      }
+      var _componentsWithTag = GetComponentsWithTag(_tag);
+      var _componentCount = array_length(_componentsWithTag);
+      if (_componentCount == 0) return _initialValue;
+         
+      var _accumulator = _initialValue;
+      for (var _i = 0; _i < _componentCount; _i++)
+      {
+         var _componentKey = _componentsWithTag[_i];
+         var _component = GetComponent(_componentKey);
+         if (_component == undefined || !_component.enabled || !variable_struct_exists(_component.queries, _queryName)) continue; 
+            
+         _data.accumulator = _accumulator;
+         var _query = _component.queries[$ _queryName](_data);
+         if (_query != undefined) _accumulator = _query;   
+      }
       return _accumulator;
    }
    
@@ -888,66 +1123,6 @@ function AtxComponentManager(_enableSave = true, _priority = ATX_SAVE.DEFAULT) c
    static GetAllTags = function()
    {
       return struct_get_names(componentTags);
-   }
-   
-   /// @description Queries components with a specific tag and collects all results
-   /// @param {string} _tag The tag to filter components by
-   /// @param {string} _queryName The name of the query to execute
-   /// @param {struct} _data The data to pass to query handlers
-   /// @return {array} Array of all non-undefined query results
-   static QueryByTag = function(_tag, _queryName, _data)
-   {
-      if (!variable_struct_exists(componentTags, _tag))
-      {
-         show_debug_message($"AtxComponentManager (QueryByTag): Tag {_tag} has no components.");
-         return [];
-      }
-      var _componentsWithTag = GetComponentsWithTag(_tag);
-      var _componentCount = array_length(_componentsWithTag);
-      if (_componentCount == 0) return [];
-         
-      var _results = [];
-      for (var _i = 0; _i < _componentCount; _i++)
-      {
-         var _componentKey = _componentsWithTag[_i];
-         var _component = GetComponent(_componentKey);
-         if (_component == undefined || !_component.enabled || !variable_struct_exists(_component.queries, _queryName)) continue;
-         var _query = _component.queries[$ _queryName](_data);
-         if (_query != undefined) array_push(_results, _query);
-      }
-      
-      return _results;
-   }
-   
-   /// @description Queries components with a specific tag using an accumulator pattern
-   /// @param {string} _tag The tag to filter components by
-   /// @param {string} _queryName The name of the query to execute
-   /// @param {any} _initialValue The starting value for the accumulator
-   /// @param {struct} _data The data to pass to query handlers
-   /// @return {any} The final accumulated value
-   static QueryReduceByTag = function(_tag, _queryName, _initialValue, _data = {})
-   {
-      if (!variable_struct_exists(componentTags, _tag))
-      {
-         show_debug_message($"AtxComponentManager (QueryReduceByTag): Tag {_tag} has no components.");
-         return _initialValue;
-      }
-      var _componentsWithTag = GetComponentsWithTag(_tag);
-      var _componentCount = array_length(_componentsWithTag);
-      if (_componentCount == 0) return _initialValue;
-         
-      var _accumulator = _initialValue;
-      for (var _i = 0; _i < _componentCount; _i++)
-      {
-         var _componentKey = _componentsWithTag[_i];
-         var _component = GetComponent(_componentKey);
-         if (_component == undefined || !_component.enabled || !variable_struct_exists(_component.queries, _queryName)) continue; 
-            
-         _data.accumulator = _accumulator;
-         var _query = _component.queries[$ _queryName](_data);
-         if (_query != undefined) _accumulator = _query;   
-      }
-      return _accumulator;
    }
    
    #endregion

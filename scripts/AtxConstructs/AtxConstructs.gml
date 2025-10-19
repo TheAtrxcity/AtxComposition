@@ -142,7 +142,7 @@ function AtxSpawnConstruct(_constructName, _x, _y, _layerOrDepthOverride = undef
       
    if (!variable_instance_exists(_constructInstanceReference, "manager"))
    {
-      _constructInstanceReference.manager = new AtxComponentManager();
+      _constructInstanceReference.manager = new AtxComponentManager(_constructInstanceReference);
    }
    
    _constructInstanceReference.manager.constructReference = _constructName;

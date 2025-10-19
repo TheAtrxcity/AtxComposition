@@ -483,10 +483,12 @@ function AtxGetSaveDataComponent(_component)
       if (_propertyName == "queries") continue;                 
       if (_propertyName == "Step") continue;                   
       if (_propertyName == "Draw") continue;                    
+      if (_propertyName == "DrawGUI") continue;                    
       if (_propertyName == "Cleanup") continue;                
       if (_propertyName == "enabled") continue;                 
       if (_propertyName == "stepPriority") continue;           
       if (_propertyName == "drawPriority") continue;            
+      if (_propertyName == "drawGUIPriority") continue;            
       if (_propertyName == "requires") continue;               
       if (string_starts_with(_propertyName, "__")) continue;    
       
